@@ -1,0 +1,9 @@
+*.idea
+*__pycache__*
+.env
+venv
+postgres_data
+app/media/*.jpg
+app/media/*.png
+app/media/*.jpeg
+app/media/*.webp
