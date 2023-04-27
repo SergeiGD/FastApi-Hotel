@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends
-from schemas.tags import Tag
+from fastapi import APIRouter, Depends, HTTPException, status
+from schemas.tags import Tag, TagCreate, TagUpdate
 from sqlalchemy.orm import Session
 from dependencies import get_db
 from hotel_business_module.gateways.tags_gateway import TagsGateway
+from hotel_business_module.models.tags import Tag as DbTag
+from utils import update_model_fields, raise_not_fount
 
 
 router = APIRouter(
@@ -13,5 +15,43 @@ router = APIRouter(
 
 @router.get('/', response_model=list[Tag])
 def get_tags(db: Session = Depends(get_db)):
-    tags = TagsGateway.get_all(db)
-    return tags
+    return TagsGateway.get_all(db)
+
+
+@router.get('/{tag_id}', response_model=Tag)
+def get_tag(tag_id: int, db: Session = Depends(get_db)):
+    db_tag = TagsGateway.get_by_id(tag_id, db)
+    if db_tag is None:
+        raise_not_fount(DbTag.REPR_MODEL_NAME)
+    return db_tag
+
+
+@router.post('/', response_model=Tag)
+def create_tag(tag: TagCreate, db: Session = Depends(get_db)):
+    try:
+        db_tag = DbTag(**tag.dict())
+        TagsGateway.save_tag(db_tag, db)
+    except ValueError as err:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
+    return db_tag
+
+
+@router.put('/{tag_id}', response_model=Tag)
+def edit_tag(tag_id: int, tag: TagUpdate,  db: Session = Depends(get_db)):
+    db_tag = TagsGateway.get_by_id(tag_id, db)
+    if db_tag is None:
+        raise_not_fount(DbTag.REPR_MODEL_NAME)
+
+    try:
+        update_model_fields(db_tag, tag.dict())
+        TagsGateway.save_tag(db_tag, db)
+    except ValueError as err:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
+    return db_tag
+
+
+@router.delete('/{tag_id}', status_code=status.HTTP_204_NO_CONTENT)
+def delete_tag(tag_id: int, db: Session = Depends(get_db)):
+    db_tag = TagsGateway.get_by_id(tag_id, db)
+    if db_tag is not None:
+        TagsGateway.delete_tag(db_tag, db)
