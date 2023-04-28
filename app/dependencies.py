@@ -69,6 +69,6 @@ class PermissionsDependency:
         if not UsersGateway.can_actions(user=current_user, db=db, codes=self.required_permissions):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail='недостаточно прав для совершения операции'
+                detail='Недостаточно прав для совершения операции'
             )
         return True

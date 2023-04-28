@@ -24,3 +24,16 @@ def login(
 
     access_token, refresh_token = UsersGateway.generate_auth_tokens(user.id)
     return JWTToken(access_token=access_token, refresh_token=refresh_token)
+
+
+@router.post('/refresh_user_token', response_model=JWTToken)
+def refresh_user_token(
+        token: Annotated[str, Body(embed=True)],
+        db: Annotated[Session, Depends(get_db)]
+):
+    try:
+        access_token, refresh_token = UsersGateway.refresh_auth_tokens(token, db)
+    except ValueError as err:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(err))
+
+    return JWTToken(access_token=access_token, refresh_token=refresh_token)
