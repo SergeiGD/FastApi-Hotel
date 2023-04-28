@@ -1,7 +1,9 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from schemas.tags import Tag, TagCreate, TagUpdate
 from sqlalchemy.orm import Session
-from dependencies import get_db
+from dependencies import get_db, PermissionsDependency
 from hotel_business_module.gateways.tags_gateway import TagsGateway
 from hotel_business_module.models.tags import Tag as DbTag
 from utils import update_model_fields, raise_not_fount
@@ -27,7 +29,11 @@ def get_tag(tag_id: int, db: Session = Depends(get_db)):
 
 
 @router.post('/', response_model=Tag, status_code=status.HTTP_201_CREATED)
-def create_tag(tag: TagCreate, db: Session = Depends(get_db)):
+def create_tag(
+        tag: TagCreate,
+        access: Annotated[None, Depends(PermissionsDependency(['add_tag']))],
+        db: Session = Depends(get_db),
+):
     try:
         db_tag = DbTag(**tag.dict())
         TagsGateway.save_tag(db_tag, db)
@@ -37,7 +43,12 @@ def create_tag(tag: TagCreate, db: Session = Depends(get_db)):
 
 
 @router.put('/{tag_id}', response_model=Tag)
-def edit_tag(tag_id: int, tag: TagUpdate,  db: Session = Depends(get_db)):
+def edit_tag(
+        tag_id: int,
+        tag: TagUpdate,
+        access: Annotated[None, Depends(PermissionsDependency(['edit_tag']))],
+        db: Session = Depends(get_db),
+):
     db_tag = TagsGateway.get_by_id(tag_id, db)
     if db_tag is None:
         raise_not_fount(DbTag.REPR_MODEL_NAME)
@@ -51,7 +62,11 @@ def edit_tag(tag_id: int, tag: TagUpdate,  db: Session = Depends(get_db)):
 
 
 @router.delete('/{tag_id}', status_code=status.HTTP_204_NO_CONTENT)
-def delete_tag(tag_id: int, db: Session = Depends(get_db)):
+def delete_tag(
+        tag_id: int,
+        access: Annotated[None, Depends(PermissionsDependency(['delete_tag']))],
+        db: Session = Depends(get_db),
+):
     db_tag = TagsGateway.get_by_id(tag_id, db)
     if db_tag is not None:
         TagsGateway.delete_tag(db_tag, db)

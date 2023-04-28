@@ -5,7 +5,7 @@ from pydantic import parse_obj_as
 from typing import Annotated
 from schemas.categories import Category, CategoryCreateForm, CategoryUpdateForm
 from schemas.tags import Tag
-from dependencies import get_db
+from dependencies import get_db, PermissionsDependency
 from hotel_business_module.gateways.categories_gateway import CategoriesGateway
 from hotel_business_module.gateways.tags_gateway import TagsGateway
 from hotel_business_module.models.categories import Category as DbCategory
@@ -61,7 +61,12 @@ def get_familiar(category_id: int, db: db_depends):
 
 
 @router.post('/', response_model=Category, status_code=status.HTTP_201_CREATED)
-async def create_category(category: Annotated[CategoryCreateForm, Depends()], photo: UploadFile, db: db_depends):
+async def create_category(
+        category: Annotated[CategoryCreateForm, Depends()],
+        photo: UploadFile,
+        db: db_depends,
+        access: Annotated[None, Depends(PermissionsDependency(['add_category']))],
+):
     schema_category = category.convert_to_model()  # получаем модель pydantic
     try:
         db_category = DbCategory(**schema_category.dict())
@@ -81,6 +86,7 @@ async def edit_category(
         category_id: int,
         category: Annotated[CategoryUpdateForm, Depends()],
         db: db_depends,
+        access: Annotated[None, Depends(PermissionsDependency(['edit_category']))],
         photo: UploadFile | None = None,
 ):
     db_category = CategoriesGateway.get_by_id(category_id, db)
@@ -102,7 +108,11 @@ async def edit_category(
 
 
 @router.delete('/{category_id}', status_code=status.HTTP_204_NO_CONTENT)
-def delete_tag(category_id: int, db: db_depends):
+def delete_category(
+        category_id: int, 
+        db: db_depends, 
+        access: Annotated[None, Depends(PermissionsDependency(['delete_category']))],
+):
     db_category = CategoriesGateway.get_by_id(category_id, db)
     if db_category is not None:
         CategoriesGateway.delete_category(db_category, db)
@@ -117,7 +127,12 @@ def get_tags(category_id: int, db: db_depends):
 
 
 @router.put('/{category_id}/tags', response_model=Tag)
-def add_tag(category_id: int, tag_id: Annotated[int, Body(embed=True)], db: db_depends):
+def add_tag(
+        category_id: int,
+        tag_id: Annotated[int, Body(embed=True)],
+        db: db_depends,
+        access: Annotated[None, Depends(PermissionsDependency(['edit_category', 'edit_tag']))],
+):
     db_category = CategoriesGateway.get_by_id(category_id, db)
     if db_category is None:
         raise_not_fount(DbCategory.REPR_MODEL_NAME)
@@ -130,7 +145,12 @@ def add_tag(category_id: int, tag_id: Annotated[int, Body(embed=True)], db: db_d
 
 
 @router.delete('/{category_id}/tags', status_code=status.HTTP_204_NO_CONTENT)
-def remove_tag(category_id: int, tag_id: Annotated[int, Body(embed=True)], db: db_depends):
+def remove_tag(
+        category_id: int,
+        tag_id: Annotated[int, Body(embed=True)],
+        db: db_depends,
+        access: Annotated[None, Depends(PermissionsDependency(['edit_category', 'edit_tag']))],
+):
     db_category = CategoriesGateway.get_by_id(category_id, db)
     db_tag = TagsGateway.get_by_id(tag_id, db)
     if db_category is not None and db_tag is not None:

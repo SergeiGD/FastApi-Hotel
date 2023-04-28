@@ -1,7 +1,9 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from schemas.rooms import Room, RoomCreate, RoomUpdate
 from sqlalchemy.orm import Session
-from dependencies import get_db
+from dependencies import get_db, PermissionsDependency
 from hotel_business_module.gateways.rooms_gateway import RoomsGateway
 from hotel_business_module.gateways.categories_gateway import CategoriesGateway
 from hotel_business_module.models.rooms import Room as DbRoom
@@ -29,7 +31,11 @@ def get_room(room_id: int, db: Session = Depends(get_db)):
 
 
 @router.post('/', response_model=Room, status_code=status.HTTP_201_CREATED)
-def create_room(room: RoomCreate, db: Session = Depends(get_db)):
+def create_room(
+        room: RoomCreate,
+        access: Annotated[None, Depends(PermissionsDependency(['add_room']))],
+        db: Session = Depends(get_db),
+):
     db_category = CategoriesGateway.get_by_id(room.category_id, db)
     if db_category is None:
         raise_not_fount(DbCategory.REPR_MODEL_NAME)
@@ -43,7 +49,12 @@ def create_room(room: RoomCreate, db: Session = Depends(get_db)):
 
 
 @router.put('/{room_id}', response_model=Room)
-def edit_room(room_id: int, room: RoomUpdate,  db: Session = Depends(get_db)):
+def edit_room(
+        room_id: int,
+        room: RoomUpdate,
+        access: Annotated[None, Depends(PermissionsDependency(['edit_room']))],
+        db: Session = Depends(get_db)
+):
     db_room = RoomsGateway.get_by_id(room_id, db)
     if db_room is None:
         raise_not_fount(DbRoom.REPR_MODEL_NAME)
@@ -57,7 +68,11 @@ def edit_room(room_id: int, room: RoomUpdate,  db: Session = Depends(get_db)):
 
 
 @router.delete('/{room_id}', status_code=status.HTTP_204_NO_CONTENT)
-def delete_room(room_id: int, db: Session = Depends(get_db)):
+def delete_room(
+        room_id: int,
+        access: Annotated[None, Depends(PermissionsDependency(['delete_room']))],
+        db: Session = Depends(get_db),
+):
     db_room = RoomsGateway.get_by_id(room_id, db)
     if db_room is not None:
         RoomsGateway.delete_room(db_room, db)
