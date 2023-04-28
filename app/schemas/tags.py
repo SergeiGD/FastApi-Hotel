@@ -1,9 +1,8 @@
 from pydantic import BaseModel, Field
-from typing import Annotated
 
 
 class TagBase(BaseModel):
-    name: Annotated[str, Field(description='тег', example='Панорамный вид')]
+    name: str = Field(min_length=3)
 
 
 class TagCreate(TagBase):

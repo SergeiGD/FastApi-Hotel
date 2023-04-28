@@ -26,7 +26,7 @@ def get_tag(tag_id: int, db: Session = Depends(get_db)):
     return db_tag
 
 
-@router.post('/', response_model=Tag)
+@router.post('/', response_model=Tag, status_code=status.HTTP_201_CREATED)
 def create_tag(tag: TagCreate, db: Session = Depends(get_db)):
     try:
         db_tag = DbTag(**tag.dict())

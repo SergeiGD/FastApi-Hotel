@@ -28,7 +28,7 @@ def get_room(room_id: int, db: Session = Depends(get_db)):
     return db_room
 
 
-@router.post('/', response_model=Room)
+@router.post('/', response_model=Room, status_code=status.HTTP_201_CREATED)
 def create_room(room: RoomCreate, db: Session = Depends(get_db)):
     db_category = CategoriesGateway.get_by_id(room.category_id, db)
     if db_category is None:
