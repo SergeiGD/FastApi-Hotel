@@ -1,14 +1,17 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 class BaseUser(BaseModel):
-    email: str
-    first_name: str | None = None
-    last_name: str | None = None
+    email: EmailStr
 
 
 class UserLogin(BaseUser):
     password: str
+
+
+class UserSingUp(UserLogin):
+    first_name: str | None = None
+    last_name: str | None = None
 
 
 class User(BaseUser):
