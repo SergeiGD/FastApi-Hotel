@@ -1,3 +1,3 @@
-[submodule "app/hotel_business_module"]
-	path = app/hotel_business_module
-	url = git@github.com:SergeiGD/hotel_business_module.git
+[submodule "app/hotel_business"]
+	path = app/hotel_business
+	url = git@github.com:SergeiGD/hotel_business.git
