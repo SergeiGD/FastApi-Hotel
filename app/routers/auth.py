@@ -11,6 +11,13 @@ from hotel_business_module.settings import settings
 from hotel_business_module.utils.email_sender import send_email
 from schemas.jwt_tokens import JWTToken
 from schemas.users import UserLogin, UserSingUp
+import logging
+from logger_conf import LOGGING as LOG_CONF
+
+
+logging.config.dictConfig(LOG_CONF)
+logger = logging.getLogger(__name__)
+
 
 router = APIRouter(
     prefix='/auth',
@@ -30,8 +37,10 @@ def login(
     :return:
     """
     try:
+        logger.debug('Попытка аутентификации')
         user = UsersGateway.authenticate_user(user.email, user.password, db)
     except ValueError as err:
+        logger.debug('Ошибка при аутентификации')
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(err))
 
     access_token, refresh_token = UsersGateway.generate_auth_tokens(user.id)
@@ -50,8 +59,10 @@ def refresh_user_token(
     :return:
     """
     try:
+        logger.debug('попытка обновления токена доступа')
         access_token, refresh_token = UsersGateway.refresh_auth_tokens(token, db)
     except ValueError as err:
+        logger.warning('Ошибка обновления токена доступа')
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(err))
 
     return JWTToken(access_token=access_token, refresh_token=refresh_token)
@@ -71,14 +82,17 @@ def request_reset(
     :return:
     """
     try:
+        logger.debug('Запрос сброса пароля')
         user, token = UsersGateway.request_reset(email, db)
     except ValueError as err:
+        logger.debug('Ошибка при запросе сброса пароля')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
     confirm_link = f'{settings.SITE_URL}{router.url_path_for("reset_password", token=token)}'
     email_content = f'Для сброса пароля перейдите по следующей ссылке: \n {confirm_link}'
     email_subject = 'Сброс пароля'
     # добавляем отпарвку письма в бэкграунд задачи
     background_tasks.add_task(send_email, send_to=user.email, subject=email_subject, content=email_content)
+    logger.debug('Отправка письма для сброса пароля поставлена в список задач')
     # для удобства вернем линк в ответе
     response = jsonable_encoder({'confirm_link': confirm_link})
     return JSONResponse(content=response)
@@ -97,8 +111,10 @@ def reset_password(
     :param db:
     :return:
     """
+    logger.debug('Попытка сброса пароля')
     reset_token = UsersGateway.check_token(token=token, token_type=TokenType.reset, db=db)
     if reset_token is None:
+        logger.warning('Ошибка при подтверждении сброса пароля')
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Ошибка подтврждения. Проверьте ссылку')
 
     UsersGateway.confirm_reset(token=reset_token, password=password, db=db)
@@ -120,15 +136,18 @@ def sign_up(
     :return:
     """
     try:
+        logger.debug('Попытка регистрации')
         db_client = DbClient(**user.dict())
         user, token = UsersGateway.register_user(db_client, db)
     except ValueError as err:
+        logger.debug('Ошибка при попытке регистрации')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
     confirm_link = f'{settings.SITE_URL}{router.url_path_for("confirm_sign_up", token=token)}'
     email_content = f'Для подтверждения регистрации перейдите по следующей ссылке: \n {confirm_link}'
     email_subject = 'Подтверждение регистрации'
     # добавляем отпарвку письма в бэкграунд задачи
     background_tasks.add_task(send_email, send_to=user.email, subject=email_subject, content=email_content)
+    logger.debug('Отправка письма для подтвеждения регистрации поставлена в список задач')
     # для удобства вернем линк в ответе
     response = jsonable_encoder({'confirm_link': confirm_link})
     return JSONResponse(content=response)
@@ -145,8 +164,10 @@ def confirm_sign_up(
     :param db:
     :return:
     """
+    logger.debug('Попытка подтверждения регистрации')
     sing_up_token = UsersGateway.check_token(token=token, token_type=TokenType.register, db=db)
     if sing_up_token is None:
+        logger.warning('Ошибка при попытке подтверждения регистрации')
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Ошибка подтврждения. Проверьте ссылку')
 
     UsersGateway.confirm_account(token=sing_up_token, db=db)

@@ -1,6 +1,7 @@
 *.idea
 *__pycache__*
 *.mypy_cache*
+app/logs
 .env
 venv
 postgres_data

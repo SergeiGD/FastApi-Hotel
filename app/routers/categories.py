@@ -12,6 +12,13 @@ from hotel_business_module.models.categories import Category as DbCategory
 from hotel_business_module.models.tags import Tag as DbTag
 from sqlalchemy.orm import Session
 from utils import raise_not_fount, update_model_fields
+import logging
+from logger_conf import LOGGING as LOG_CONF
+
+
+logging.config.dictConfig(LOG_CONF)
+logger = logging.getLogger(__name__)
+
 
 router = APIRouter(
     prefix='/categories',
@@ -35,6 +42,7 @@ def filter_params_dependency(
 
 @router.get('/', response_model=list[Category])
 def get_categories(filter: Annotated[dict, Depends(filter_params_dependency)], db: db_depends):
+    logger.debug(f'поиск категорий с фильтром - {filter}')
     items, pages_count = CategoriesGateway.filter(filter=filter, db=db)
     pagination_info = {
         'pages_count': pages_count,
@@ -77,6 +85,7 @@ async def create_category(
             db=db
         )
     except ValueError as err:
+        logger.info(f'ошибка создания категории. {str(err)}')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
     return db_category
 
@@ -103,6 +112,7 @@ async def edit_category(
             db=db
         )
     except ValueError as err:
+        logger.info(f'ошибка сохрарения категории. id - {category_id}, {str(err)}')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
     return db_category
 
@@ -133,6 +143,7 @@ def add_tag(
         db: db_depends,
         access: Annotated[None, Depends(PermissionsDependency(['edit_category', 'edit_tag']))],
 ):
+    logger.debug(f'попытка добавления тега {tag_id} к категории {category_id}')
     db_category = CategoriesGateway.get_by_id(category_id, db)
     if db_category is None:
         raise_not_fount(DbCategory.REPR_MODEL_NAME)
@@ -151,6 +162,7 @@ def remove_tag(
         db: db_depends,
         access: Annotated[None, Depends(PermissionsDependency(['edit_category', 'edit_tag']))],
 ):
+    logger.debug(f'попытка удаления тега {tag_id} из категории {category_id}')
     db_category = CategoriesGateway.get_by_id(category_id, db)
     db_tag = TagsGateway.get_by_id(tag_id, db)
     if db_category is not None and db_tag is not None:

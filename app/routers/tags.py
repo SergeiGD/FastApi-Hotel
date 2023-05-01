@@ -1,5 +1,5 @@
 from typing import Annotated
-
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from schemas.tags import Tag, TagCreate, TagUpdate
 from sqlalchemy.orm import Session
@@ -7,6 +7,11 @@ from dependencies import get_db, PermissionsDependency
 from hotel_business_module.gateways.tags_gateway import TagsGateway
 from hotel_business_module.models.tags import Tag as DbTag
 from utils import update_model_fields, raise_not_fount
+from logger_conf import LOGGING as LOG_CONF
+
+
+logging.config.dictConfig(LOG_CONF)
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(
@@ -38,6 +43,7 @@ def create_tag(
         db_tag = DbTag(**tag.dict())
         TagsGateway.save_tag(db_tag, db)
     except ValueError as err:
+        logger.info(f'ошибка создания тега {tag.name}, {str(err)}')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
     return db_tag
 
@@ -57,6 +63,7 @@ def edit_tag(
         update_model_fields(db_tag, tag.dict())
         TagsGateway.save_tag(db_tag, db)
     except ValueError as err:
+        logger.info(f'ошибка сохранения тега {tag_id}, {str(err)}')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
     return db_tag
 

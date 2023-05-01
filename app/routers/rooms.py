@@ -1,5 +1,5 @@
 from typing import Annotated
-
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from schemas.rooms import Room, RoomCreate, RoomUpdate
 from sqlalchemy.orm import Session
@@ -9,6 +9,11 @@ from hotel_business_module.gateways.categories_gateway import CategoriesGateway
 from hotel_business_module.models.rooms import Room as DbRoom
 from hotel_business_module.models.categories import Category as DbCategory
 from utils import raise_not_fount, update_model_fields
+from logger_conf import LOGGING as LOG_CONF
+
+
+logging.config.dictConfig(LOG_CONF)
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(
@@ -37,6 +42,7 @@ def create_room(
         db: Session = Depends(get_db),
 ):
     db_category = CategoriesGateway.get_by_id(room.category_id, db)
+    logger.debug(f'попытка создание комнаты для категории {room.category_id}')
     if db_category is None:
         raise_not_fount(DbCategory.REPR_MODEL_NAME)
 
@@ -44,6 +50,7 @@ def create_room(
         db_room = DbRoom(**room.dict(), category=db_category)
         RoomsGateway.save_room(db_room, db)
     except ValueError as err:
+        logger.info(f'ошибка создания комнаты. номер - {room.room_number}, категория {room.category_id}, {str(err)}')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
     return db_room
 
@@ -63,6 +70,7 @@ def edit_room(
         update_model_fields(db_room, room.dict())
         RoomsGateway.save_room(db_room, db)
     except ValueError as err:
+        logger.info(f'ошибка сохранения комнаты. id - {room_id}, категория {db_room.category_id}, {str(err)}')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
     return db_room
 
