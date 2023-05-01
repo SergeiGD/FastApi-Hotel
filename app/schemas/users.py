@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class BaseUser(BaseModel):
@@ -6,7 +6,7 @@ class BaseUser(BaseModel):
 
 
 class UserLogin(BaseUser):
-    password: str
+    password: str = Field(example='pasdwqes21sd')
 
 
 class UserSingUp(UserLogin):

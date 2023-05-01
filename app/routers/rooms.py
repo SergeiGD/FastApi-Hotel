@@ -31,6 +31,7 @@ def get_rooms(db: Session = Depends(get_db)):
 def get_room(room_id: int, db: Session = Depends(get_db)):
     db_room = RoomsGateway.get_by_id(room_id, db)
     if db_room is None:
+        logger.warning(f'Комната с id {room_id} не найдена')
         raise_not_fount(DbRoom.REPR_MODEL_NAME)
     return db_room
 
@@ -50,7 +51,7 @@ def create_room(
         db_room = DbRoom(**room.dict(), category=db_category)
         RoomsGateway.save_room(db_room, db)
     except ValueError as err:
-        logger.info(f'ошибка создания комнаты. номер - {room.room_number}, категория {room.category_id}, {str(err)}')
+        logger.warning(f'Ошибка создания комнаты. номер - {room.room_number}, категория {room.category_id}, {str(err)}')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
     return db_room
 
@@ -70,7 +71,7 @@ def edit_room(
         update_model_fields(db_room, room.dict())
         RoomsGateway.save_room(db_room, db)
     except ValueError as err:
-        logger.info(f'ошибка сохранения комнаты. id - {room_id}, категория {db_room.category_id}, {str(err)}')
+        logger.warning(f'Ошибка сохранения комнаты. id - {room_id}, категория {db_room.category_id}, {str(err)}')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
     return db_room
 
@@ -83,4 +84,5 @@ def delete_room(
 ):
     db_room = RoomsGateway.get_by_id(room_id, db)
     if db_room is not None:
+        logger.warning(f'Комната с id {room_id} не найдена')
         RoomsGateway.delete_room(db_room, db)

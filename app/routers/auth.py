@@ -8,7 +8,7 @@ from hotel_business_module.gateways.users_gateway import UsersGateway
 from hotel_business_module.models.tokens import TokenType
 from hotel_business_module.models.users import Client as DbClient
 from hotel_business_module.settings import settings
-from hotel_business_module.utils.email_sender import send_email
+from tasks import send_email_to_user
 from schemas.jwt_tokens import JWTToken
 from schemas.users import UserLogin, UserSingUp
 import logging
@@ -17,7 +17,6 @@ from logger_conf import LOGGING as LOG_CONF
 
 logging.config.dictConfig(LOG_CONF)
 logger = logging.getLogger(__name__)
-
 
 router = APIRouter(
     prefix='/auth',
@@ -32,15 +31,20 @@ def login(
 ):
     """
     Аутентификация
+    - **email**: адрес эл. почты
+    - **password**: пароль
+    - **first_name**: имя (опционально)
+    - **last_name**: фамилия (опционально)
+    \f
     :param user:
     :param db:
     :return:
     """
     try:
-        logger.debug('Попытка аутентификации')
+        logger.info(f'Попытка аутентификации пользователя {user.email[0:4]}***')
         user = UsersGateway.authenticate_user(user.email, user.password, db)
     except ValueError as err:
-        logger.debug('Ошибка при аутентификации')
+        logger.warning(f'Ошибка при аутентификации пользователя {user.email[0:4]}***')
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(err))
 
     access_token, refresh_token = UsersGateway.generate_auth_tokens(user.id)
@@ -54,12 +58,14 @@ def refresh_user_token(
 ):
     """
     Обноваление JWT токена
+    - **token**: токен обновления
+    \f
     :param token:
     :param db:
     :return:
     """
     try:
-        logger.debug('попытка обновления токена доступа')
+        logger.info('Попытка обновления токена доступа')
         access_token, refresh_token = UsersGateway.refresh_auth_tokens(token, db)
     except ValueError as err:
         logger.warning('Ошибка обновления токена доступа')
@@ -76,23 +82,25 @@ def request_reset(
 ):
     """
     Запрос смены пароля
+    - **email**: адрес эл. почты
+    \f
     :param email:
     :param background_tasks:
     :param db:
     :return:
     """
     try:
-        logger.debug('Запрос сброса пароля')
+        logger.info(f'Запрос сброса пароля пользователя {email[0:4]}***')
         user, token = UsersGateway.request_reset(email, db)
     except ValueError as err:
-        logger.debug('Ошибка при запросе сброса пароля')
+        logger.warning(f'Ошибка при запросе сброса пароля пользователя {email[0:4]}***')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
     confirm_link = f'{settings.SITE_URL}{router.url_path_for("reset_password", token=token)}'
     email_content = f'Для сброса пароля перейдите по следующей ссылке: \n {confirm_link}'
     email_subject = 'Сброс пароля'
     # добавляем отпарвку письма в бэкграунд задачи
-    background_tasks.add_task(send_email, send_to=user.email, subject=email_subject, content=email_content)
-    logger.debug('Отправка письма для сброса пароля поставлена в список задач')
+    background_tasks.add_task(send_email_to_user, send_to=user.email, subject=email_subject, content=email_content)
+    logger.debug(f'Отправка письма для сброса пароля пользователя пользователя {email[0:4]}*** поставлена в список задач')
     # для удобства вернем линк в ответе
     response = jsonable_encoder({'confirm_link': confirm_link})
     return JSONResponse(content=response)
@@ -106,12 +114,15 @@ def reset_password(
 ):
     """
     Подтверждение смены пароля
+    - **token**: токен подтверждения сброса пароля
+    - **password**: новый пароль
+    \f
     :param token:
     :param password:
     :param db:
     :return:
     """
-    logger.debug('Попытка сброса пароля')
+    logger.info('Попытка подтверждения сброса пароля')
     reset_token = UsersGateway.check_token(token=token, token_type=TokenType.reset, db=db)
     if reset_token is None:
         logger.warning('Ошибка при подтверждении сброса пароля')
@@ -130,24 +141,27 @@ def sign_up(
 ):
     """
     Регистрация
+    \f
     :param user:
     :param background_tasks:
     :param db:
     :return:
     """
     try:
-        logger.debug('Попытка регистрации')
+        logger.info(f'Попытка регистрации пользователя {user.email[0:4]}***')
         db_client = DbClient(**user.dict())
         user, token = UsersGateway.register_user(db_client, db)
     except ValueError as err:
-        logger.debug('Ошибка при попытке регистрации')
+        logger.debug(f'Ошибка при попытке регистрации пользователя {user.email[0:4]}***')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
     confirm_link = f'{settings.SITE_URL}{router.url_path_for("confirm_sign_up", token=token)}'
     email_content = f'Для подтверждения регистрации перейдите по следующей ссылке: \n {confirm_link}'
     email_subject = 'Подтверждение регистрации'
     # добавляем отпарвку письма в бэкграунд задачи
-    background_tasks.add_task(send_email, send_to=user.email, subject=email_subject, content=email_content)
-    logger.debug('Отправка письма для подтвеждения регистрации поставлена в список задач')
+    background_tasks.add_task(send_email_to_user, send_to=user.email, subject=email_subject, content=email_content)
+    logger.info(
+        f'Отправка письма для подтвеждения регистрации пользователя {user.email[0:4]}*** поставлена в список задач'
+    )
     # для удобства вернем линк в ответе
     response = jsonable_encoder({'confirm_link': confirm_link})
     return JSONResponse(content=response)
@@ -160,11 +174,13 @@ def confirm_sign_up(
 ):
     """
     Подтверждение регистрации
+    - **token**: токен подтверждения регистрации
+    \f
     :param token:
     :param db:
     :return:
     """
-    logger.debug('Попытка подтверждения регистрации')
+    logger.info('Попытка подтверждения регистрации')
     sing_up_token = UsersGateway.check_token(token=token, token_type=TokenType.register, db=db)
     if sing_up_token is None:
         logger.warning('Ошибка при попытке подтверждения регистрации')

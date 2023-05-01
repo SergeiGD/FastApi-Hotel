@@ -29,6 +29,7 @@ def get_tags(db: Session = Depends(get_db)):
 def get_tag(tag_id: int, db: Session = Depends(get_db)):
     db_tag = TagsGateway.get_by_id(tag_id, db)
     if db_tag is None:
+        logger.warning(f'Тег с id {tag_id} не найден')
         raise_not_fount(DbTag.REPR_MODEL_NAME)
     return db_tag
 
@@ -43,7 +44,7 @@ def create_tag(
         db_tag = DbTag(**tag.dict())
         TagsGateway.save_tag(db_tag, db)
     except ValueError as err:
-        logger.info(f'ошибка создания тега {tag.name}, {str(err)}')
+        logger.warning(f'Ошибка создания тега {tag.name}, {str(err)}')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
     return db_tag
 
@@ -63,7 +64,7 @@ def edit_tag(
         update_model_fields(db_tag, tag.dict())
         TagsGateway.save_tag(db_tag, db)
     except ValueError as err:
-        logger.info(f'ошибка сохранения тега {tag_id}, {str(err)}')
+        logger.info(f'Ошибка сохранения тега {tag_id}, {str(err)}')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
     return db_tag
 

@@ -56,6 +56,7 @@ def get_categories(filter: Annotated[dict, Depends(filter_params_dependency)], d
 def get_category(category_id: int, db: db_depends):
     db_category = CategoriesGateway.get_by_id(category_id, db)
     if db_category is None:
+        logger.warning(f'Категория с id {category_id} не найдена')
         raise_not_fount(DbCategory.REPR_MODEL_NAME)
     return db_category
 
@@ -64,6 +65,7 @@ def get_category(category_id: int, db: db_depends):
 def get_familiar(category_id: int, db: db_depends):
     db_category = CategoriesGateway.get_by_id(category_id, db)
     if db_category is None:
+        logger.warning(f'Категория с id {category_id} не найдена')
         raise_not_fount(DbCategory.REPR_MODEL_NAME)
     return CategoriesGateway.get_familiar(db_category, db)
 
@@ -85,7 +87,7 @@ async def create_category(
             db=db
         )
     except ValueError as err:
-        logger.info(f'ошибка создания категории. {str(err)}')
+        logger.info(f'Ошибка создания категории. {str(err)}')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
     return db_category
 
@@ -112,7 +114,7 @@ async def edit_category(
             db=db
         )
     except ValueError as err:
-        logger.info(f'ошибка сохрарения категории. id - {category_id}, {str(err)}')
+        logger.info(f'Ошибка сохрарения категории. id - {category_id}, {str(err)}')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
     return db_category
 
@@ -146,9 +148,11 @@ def add_tag(
     logger.debug(f'попытка добавления тега {tag_id} к категории {category_id}')
     db_category = CategoriesGateway.get_by_id(category_id, db)
     if db_category is None:
+        logger.warning(f'Категория с id {category_id} не найдена')
         raise_not_fount(DbCategory.REPR_MODEL_NAME)
     db_tag = TagsGateway.get_by_id(tag_id, db)
     if db_tag is None:
+        logger.warning(f'Тег с id {tag_id} не найден')
         raise_not_fount(DbTag.REPR_MODEL_NAME)
 
     CategoriesGateway.add_tag_to_category(db_category, db_tag, db)
