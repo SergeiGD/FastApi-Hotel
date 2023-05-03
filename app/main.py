@@ -1,5 +1,3 @@
-import string
-import random
 from time import time
 from fastapi import FastAPI, Request
 import uvicorn
