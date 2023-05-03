@@ -8,6 +8,7 @@ from hotel_business_module.models.base import Base
 from hotel_business_module.session.session import engine
 from logger_conf import LOGGING as LOG_CONF
 import logging
+import uuid
 
 
 logging.config.dictConfig(LOG_CONF)
@@ -25,13 +26,19 @@ async def log_requests(request: Request, call_next):
     :param call_next:
     :return:
     """
-    request_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    # генерируем идентификатор запроса
+    request_id = uuid.uuid4().hex
+    # фиксируем время начала выполнения
     start_time = time()
+    # пишем в логи информацию о начале обработки
     logger.info(
         f'Начато выполнение запроса {request_id} по адресу {request.url.path}. Метод запроса - {request.method}'
     )
+    # выполнеяем запрос
     response = await call_next(request)
+    # высчитываем время выполения
     process_time = time() - start_time
+    # пишем в логи информацию о результате обработки
     logger.info(
         f'Запрос {request_id} выполнен за {process_time}. Код ответа - {response.status_code}'
     )

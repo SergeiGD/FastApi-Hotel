@@ -14,4 +14,9 @@ def update_model_fields(obj: Base, data: dict):
 
 
 def raise_not_fount(model_name: str):
+    """
+    Генерация ошибки 404
+    :param model_name: наименование модели
+    :return:
+    """
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'{model_name} не найден')

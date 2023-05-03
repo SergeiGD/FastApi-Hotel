@@ -17,7 +17,7 @@ def send_email_to_user(send_to: str, subject: str, content: str):
     :param content:
     :return:
     """
-    email_logger.info(f'Отправка письма пользователю {send_to[0:4]}***')
+    email_logger.info(f'Отправка письма пользователю {send_to[0:4]}***. Тема - {subject}')
     try:
         send_email(subject=subject, content=content, send_to=send_to)
     except (SMTPException, MessageError) as err:

@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-# настраиваем файлы логирования
+# настраиваем пути логирования
 LOG_DIR = os.path.join(pathlib.Path().resolve(), 'logs')
 COMMON_LOG_FILE = '/app_logs.log'
 REQUESTS_LOG_FILE = '/requests.log'
