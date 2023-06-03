@@ -92,7 +92,7 @@ async def create_category(
     return db_category
 
 
-@router.patch('/{category_id}', response_model=Category)
+@router.put('/{category_id}', response_model=Category)
 async def edit_category(
         category_id: int,
         category: Annotated[CategoryUpdateForm, Depends()],

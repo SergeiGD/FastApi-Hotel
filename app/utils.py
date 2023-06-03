@@ -10,8 +10,7 @@ def update_model_fields(obj: Base, data: dict):
     :return:
     """
     for attr, value in data.items():
-        if value is not None:
-            setattr(obj, attr, value)
+        setattr(obj, attr, value)
 
 
 def raise_not_fount(model_name: str):

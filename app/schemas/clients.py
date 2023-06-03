@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from datetime import date, datetime
 
 
@@ -9,7 +9,7 @@ class ClientBase(BaseModel):
 
 
 class ClientCreate(ClientBase):
-    email: str
+    email: EmailStr
 
 
 class ClientUpdate(ClientBase):

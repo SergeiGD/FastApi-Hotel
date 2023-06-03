@@ -52,7 +52,7 @@ def create_client(
     return db_client
 
 
-@router.patch('/{client_id}', response_model=Client, dependencies=[Depends(PermissionsDependency(['edit_client']))],)
+@router.put('/{client_id}', response_model=Client, dependencies=[Depends(PermissionsDependency(['edit_client']))],)
 def edit_client(
         client_id: int,
         client: ClientUpdate,

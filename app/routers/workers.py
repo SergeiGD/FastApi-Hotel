@@ -52,7 +52,7 @@ def create_worker(
     return db_worker
 
 
-@router.patch('/{worker_id}', response_model=Worker, dependencies=[Depends(PermissionsDependency(['edit_worker']))],)
+@router.put('/{worker_id}', response_model=Worker, dependencies=[Depends(PermissionsDependency(['edit_worker']))],)
 def edit_worker(
         worker_id: int,
         worker: WorkerUpdate,

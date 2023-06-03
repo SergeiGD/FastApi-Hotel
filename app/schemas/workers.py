@@ -1,5 +1,5 @@
 from decimal import Decimal
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
 
@@ -10,7 +10,7 @@ class WorkerBase(BaseModel):
 
 
 class WorkerCreate(WorkerBase):
-    email: str
+    email: EmailStr
 
 
 class WorkerUpdate(WorkerBase):
