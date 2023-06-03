@@ -84,5 +84,4 @@ def delete_room(
 ):
     db_room = RoomsGateway.get_by_id(room_id, db)
     if db_room is not None:
-        logger.warning(f'Комната с id {room_id} не найдена')
         RoomsGateway.delete_room(db_room, db)
