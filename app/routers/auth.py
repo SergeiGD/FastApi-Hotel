@@ -33,8 +33,6 @@ def login(
     Аутентификация
     - **email**: адрес эл. почты
     - **password**: пароль
-    - **first_name**: имя (опционально)
-    - **last_name**: фамилия (опционально)
     \f
     :param user:
     :param db:
@@ -141,6 +139,10 @@ def sign_up(
 ):
     """
     Регистрация
+    - **email**: адрес эл. почты
+    - **password**: пароль
+    - **first_name**: имя (опционально)
+    - **last_name**: фамилия (опционально)
     \f
     :param user:
     :param background_tasks:

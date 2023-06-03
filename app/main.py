@@ -1,7 +1,7 @@
 from time import time
 from fastapi import FastAPI, Request
 import uvicorn
-from routers import tags, rooms, categories, auth, clients
+from routers import tags, rooms, categories, auth, clients, workers
 from hotel_business_module.models.base import Base
 from hotel_business_module.session.session import engine
 from logger_conf import LOGGING as LOG_CONF
@@ -47,6 +47,7 @@ app.include_router(rooms.router)
 app.include_router(categories.router)
 app.include_router(auth.router)
 app.include_router(clients.router)
+app.include_router(workers.router)
 
 if __name__ == "__main__":
     uvicorn.run('main:app', host="0.0.0.0", reload=True)

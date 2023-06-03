@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, HTTPException, status, Body
-from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException, status
 from dependencies import get_db, PermissionsDependency
 from schemas.clients import Client, ClientCreate, ClientUpdate
 from hotel_business_module.gateways.clients_gateway import ClientsGateway
@@ -20,12 +19,12 @@ router = APIRouter(
 )
 
 
-@router.get('/', response_model=list[Client])
+@router.get('/', response_model=list[Client], dependencies=[Depends(PermissionsDependency(['show_client']))],)
 def get_clients(db: Session = Depends(get_db)):
     return ClientsGateway.get_all(db)
 
 
-@router.get('/{client_id}', response_model=Client)
+@router.get('/{client_id}', response_model=Client, dependencies=[Depends(PermissionsDependency(['show_client']))],)
 def get_client(client_id: int, db: Session = Depends(get_db)):
     db_client = ClientsGateway.get_by_id(client_id, db)
     if db_client is None:
