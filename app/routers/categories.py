@@ -5,10 +5,13 @@ from pydantic import parse_obj_as
 from typing import Annotated
 from schemas.categories import Category, CategoryCreateForm, CategoryUpdateForm
 from schemas.tags import Tag
+from schemas.sales import Sale
 from dependencies import get_db, PermissionsDependency
 from hotel_business_module.gateways.categories_gateway import CategoriesGateway
 from hotel_business_module.gateways.tags_gateway import TagsGateway
+from hotel_business_module.gateways.sales_gateway import SalesGateway
 from hotel_business_module.models.categories import Category as DbCategory
+from hotel_business_module.models.sales import Sale as DbSale
 from hotel_business_module.models.tags import Tag as DbTag
 from sqlalchemy.orm import Session
 from utils import raise_not_fount, update_model_fields
@@ -92,7 +95,7 @@ async def create_category(
     return db_category
 
 
-@router.put('/{category_id}', response_model=Category)
+@router.patch('/{category_id}', response_model=Category)
 async def edit_category(
         category_id: int,
         category: Annotated[CategoryUpdateForm, Depends()],
@@ -171,3 +174,46 @@ def remove_tag(
     db_tag = TagsGateway.get_by_id(tag_id, db)
     if db_category is not None and db_tag is not None:
         CategoriesGateway.remove_tag_from_category(db_category, db_tag, db)
+
+
+@router.get('/{category_id}/sales', response_model=list[Sale])
+def get_sales(category_id: int, db: db_depends):
+    db_category = CategoriesGateway.get_by_id(category_id, db)
+    if db_category is None:
+        raise_not_fount(DbCategory.REPR_MODEL_NAME)
+    return db_category.sales
+
+
+@router.put('/{category_id}/sales', response_model=Sale)
+def add_sale(
+        category_id: int,
+        sale_id: Annotated[int, Body(embed=True)],
+        db: db_depends,
+        access: Annotated[None, Depends(PermissionsDependency(['edit_category', 'edit_sale']))],
+):
+    logger.debug(f'попытка добавления скидки {sale_id} к категории {category_id}')
+    db_category = CategoriesGateway.get_by_id(category_id, db)
+    if db_category is None:
+        logger.warning(f'Категория с id {category_id} не найдена')
+        raise_not_fount(DbCategory.REPR_MODEL_NAME)
+    db_sale = SalesGateway.get_by_id(sale_id, db)
+    if db_sale is None:
+        logger.warning(f'Скидка с id {sale_id} не найден')
+        raise_not_fount(DbSale.REPR_MODEL_NAME)
+
+    CategoriesGateway.add_sale_to_category(db_category, db_sale, db)
+    return db_sale
+
+
+@router.delete('/{category_id}/sales', status_code=status.HTTP_204_NO_CONTENT)
+def remove_tag(
+        category_id: int,
+        sale_id: Annotated[int, Body(embed=True)],
+        db: db_depends,
+        access: Annotated[None, Depends(PermissionsDependency(['edit_category', 'edit_tag']))],
+):
+    logger.debug(f'попытка удаления скидки {sale_id} из категории {category_id}')
+    db_category = CategoriesGateway.get_by_id(category_id, db)
+    db_sale = SalesGateway.get_by_id(sale_id, db)
+    if db_category is not None and db_sale is not None:
+        CategoriesGateway.remove_sale_to_category(db_category, db_sale, db)

@@ -60,15 +60,15 @@ class CategoryCreateForm:
     """
     Класс преобразования форм даты в модель pydantic при создании категории
     """
-    name: Annotated[str, Form()]
+    name: Annotated[str, Form(min_length=3)]
     description: Annotated[str, Form()]
-    price: Annotated[Decimal, Form()]
-    prepayment_percent: Annotated[float, Form()]
-    refund_percent: Annotated[float, Form()]
-    rooms_count: Annotated[int, Form()]
-    floors: Annotated[int, Form()]
-    beds: Annotated[int, Form()]
-    square: Annotated[float, Form()]
+    price: Annotated[Decimal, Form(gt=0)]
+    prepayment_percent: Annotated[float, Form(gt=0, lt=100)]
+    refund_percent: Annotated[float, Form(gt=0, lt=100)]
+    rooms_count: Annotated[int, Form(gt=0)]
+    floors: Annotated[int, Form(gt=0)]
+    beds: Annotated[int, Form(gt=0)]
+    square: Annotated[float, Form(gt=20)]
 
     def convert_to_model(self) -> CategoryCreate:
         """
@@ -83,15 +83,15 @@ class CategoryUpdateForm:
     """
     Класс преобразования форм даты в модель pydantic при изменении категории
     """
-    name: Annotated[str, Form()] | None = None
+    name: Annotated[str, Form(min_length=3)] | None = None
     description: Annotated[str, Form()] | None = None
-    price: Annotated[Decimal, Form()] | None = None
-    prepayment_percent: Annotated[float, Form()] | None = None
-    refund_percent: Annotated[float, Form()] | None = None
-    rooms_count: Annotated[int, Form()] | None = None
-    floors: Annotated[int, Form()] | None = None
-    beds: Annotated[int, Form()] | None = None
-    square: Annotated[float, Form()] | None = None
+    price: Annotated[Decimal, Form(gt=0)] | None = None
+    prepayment_percent: Annotated[float, Form(gt=0, lt=100)] | None = None
+    refund_percent: Annotated[float, Form(gt=0, lt=100)] | None = None
+    rooms_count: Annotated[int, Form(gt=0)] | None = None
+    floors: Annotated[int, Form(gt=0)] | None = None
+    beds: Annotated[int, Form(gt=0)] | None = None
+    square: Annotated[float, Form(gt=20)] | None = None
 
     def convert_to_model(self, db_category: DbCategory) -> CategoryUpdate:
         """
