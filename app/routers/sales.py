@@ -1,7 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, HTTPException, status, Body
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-from pydantic import parse_obj_as
+from fastapi import APIRouter, Depends, UploadFile, HTTPException, status
 from typing import Annotated
 from schemas.sales import Sale, SaleCreateForm, SaleUpdateForm
 from dependencies import get_db, PermissionsDependency
@@ -70,7 +67,7 @@ async def create_sale(
 )
 async def edit_sale(
         sale_id: int,
-        category: Annotated[SaleUpdateForm, Depends()],
+        sale: Annotated[SaleUpdateForm, Depends()],
         db: Session = Depends(get_db),
         photo: UploadFile | None = None,
 ):
@@ -78,7 +75,7 @@ async def edit_sale(
     if db_sale is None:
         raise_not_fount(DbSale.REPR_MODEL_NAME)
 
-    schema_sale = category.convert_to_model(db_sale)  # получаем модель pydantic
+    schema_sale = sale.convert_to_model(db_sale)  # получаем модель pydantic
     try:
         update_model_fields(db_sale, schema_sale.dict())  # обновляем поля
         await SalesGateway.asave_sale(

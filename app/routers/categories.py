@@ -6,6 +6,8 @@ from typing import Annotated
 from schemas.categories import Category, CategoryCreateForm, CategoryUpdateForm
 from schemas.tags import Tag
 from schemas.sales import Sale
+from schemas.rooms import Room
+from schemas.photos import Photo
 from dependencies import get_db, PermissionsDependency
 from hotel_business_module.gateways.categories_gateway import CategoriesGateway
 from hotel_business_module.gateways.tags_gateway import TagsGateway
@@ -217,3 +219,19 @@ def remove_tag(
     db_sale = SalesGateway.get_by_id(sale_id, db)
     if db_category is not None and db_sale is not None:
         CategoriesGateway.remove_sale_to_category(db_category, db_sale, db)
+
+
+@router.get('/{category_id}/rooms', response_model=list[Room])
+def get_rooms(category_id: int, db: db_depends):
+    db_category = CategoriesGateway.get_by_id(category_id, db)
+    if db_category is None:
+        raise_not_fount(DbCategory.REPR_MODEL_NAME)
+    return db_category.rooms
+
+
+@router.get('/{category_id}/photos', response_model=list[Photo])
+def get_photos(category_id: int, db: db_depends):
+    db_category = CategoriesGateway.get_by_id(category_id, db)
+    if db_category is None:
+        raise_not_fount(DbCategory.REPR_MODEL_NAME)
+    return db_category.photos
