@@ -1,7 +1,8 @@
 from hotel_business_module.session.session import get_session
 from hotel_business_module.gateways.users_gateway import UsersGateway
 from fastapi import HTTPException, status, Depends, Security
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials
+from utils import HTTPBearer401
 from hotel_business_module.settings import settings
 from typing import Annotated
 from sqlalchemy.orm import Session
@@ -23,7 +24,7 @@ def get_db():
 
 def get_current_user(
         db: Annotated[Session, Depends(get_db)],
-        credentials: Annotated[HTTPAuthorizationCredentials, Security(HTTPBearer())],
+        credentials: Annotated[HTTPAuthorizationCredentials, Security(HTTPBearer401())],
 ):
     """
     Зависимость для получения текущего пользователя с помощью Bearer токена
@@ -56,7 +57,7 @@ def get_current_user(
 
 class PermissionsDependency:
     """
-    Зависимость для проверка прав пользователя
+    Зависимость для проверки прав пользователя
     """
     def __init__(self, required_permissions: list[str]):
         self.required_permissions = required_permissions

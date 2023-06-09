@@ -1,5 +1,6 @@
 from time import time
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from routers import tags, rooms, categories, auth, clients, workers, groups, permissions, sales, photos
 from hotel_business_module.models.base import Base
@@ -15,6 +16,20 @@ logger = logging.getLogger('requests_logger')
 Base.metadata.create_all(engine)
 app = FastAPI()
 
+origins = [
+    'http://localhost',
+    'http://localhost:8080',
+    'http://192.168.1.63',
+    'http://192.168.1.63:8080',
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.middleware('http')
 async def log_requests(request: Request, call_next):
