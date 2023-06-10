@@ -92,7 +92,7 @@ def delete_group(
 @router.get(
     '/{group_id}/permissions',
     response_model=list[Permission],
-    dependencies=[Depends(PermissionsDependency(['edit_group']))]
+    dependencies=[Depends(PermissionsDependency(['show_group', 'show_permissions']))]
 )
 def get_permissions(group_id: int, db: Session = Depends(get_db)):
     db_group = GroupsGateway.get_by_id(group_id, db)
