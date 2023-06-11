@@ -45,8 +45,7 @@ class PhotosUpdateForm:
     """
     Класс преобразования форм даты в модель pydantic при изменении фотографии
     """
-    order: Annotated[int, Form(gt=0)] | None = None
-
+    order: int | None = Form(gt=0, default=None)
 
     def convert_to_model(self, db_photo: DbPhoto) -> PhotoUpdate:
         """

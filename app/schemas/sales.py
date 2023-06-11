@@ -69,11 +69,11 @@ class SaleUpdateForm:
     """
     Класс преобразования форм даты в модель pydantic при изменении скидки
     """
-    name: Annotated[str, Form(min_length=3)] | None = None
-    description: Annotated[str, Form(gt=0, lt=100)] | None = None
-    discount: Annotated[float, Form()] | None = None
-    start_date: Annotated[datetime, Form()] | None = None
-    end_date: Annotated[datetime, Form()] | None = None
+    name: str | None = Form(min_length=3, default=None)
+    description: str | None = Form(default=None)
+    discount: float | None = Form(gt=0, lt=100, default=None)
+    start_date: datetime | None = Form(default=None)
+    end_date: datetime | None = Form(default=None)
 
     def convert_to_model(self, db_sale: DbCategory) -> SaleUpdate:
         """

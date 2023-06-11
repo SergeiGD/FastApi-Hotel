@@ -1,7 +1,9 @@
 from time import time
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import uvicorn
+
 from routers import tags, rooms, categories, auth, clients, workers, groups, permissions, sales, photos
 from hotel_business_module.models.base import Base
 from hotel_business_module.session.session import engine
@@ -15,6 +17,7 @@ logger = logging.getLogger('requests_logger')
 
 Base.metadata.create_all(engine)
 app = FastAPI()
+app.mount('/app/media', StaticFiles(directory='media'), name='media')
 
 origins = [
     'http://localhost',

@@ -83,15 +83,15 @@ class CategoryUpdateForm:
     """
     Класс преобразования форм даты в модель pydantic при изменении категории
     """
-    name: Annotated[str, Form(min_length=3)] | None = None
-    description: Annotated[str, Form()] | None = None
-    price: Annotated[Decimal, Form(gt=0)] | None = None
-    prepayment_percent: Annotated[float, Form(gt=0, lt=100)] | None = None
-    refund_percent: Annotated[float, Form(gt=0, lt=100)] | None = None
-    rooms_count: Annotated[int, Form(gt=0)] | None = None
-    floors: Annotated[int, Form(gt=0)] | None = None
-    beds: Annotated[int, Form(gt=0)] | None = None
-    square: Annotated[float, Form(gt=20)] | None = None
+    name: str | None = Form(min_length=3, default=None)
+    description: str | None = Form(default=None)
+    price: Decimal | None = Form(gt=0, default=None)
+    prepayment_percent: float | None = Form(gt=0, lt=100, default=None)
+    refund_percent: float | None = Form(gt=0, lt=100, default=None)
+    rooms_count: int | None = Form(gt=0, default=None)
+    floors: int | None = Form(gt=0, default=None)
+    beds: int | None = Form(gt=0, default=None)
+    square: float | None = Form(gt=20, default=None)
 
     def convert_to_model(self, db_category: DbCategory) -> CategoryUpdate:
         """

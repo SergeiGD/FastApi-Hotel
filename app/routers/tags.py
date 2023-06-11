@@ -72,7 +72,7 @@ def edit_tag(
 @router.delete('/{tag_id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_tag(
         tag_id: int,
-        # access: Annotated[None, Depends(PermissionsDependency(['delete_tag']))],
+        access: Annotated[None, Depends(PermissionsDependency(['delete_tag']))],
         db: Session = Depends(get_db),
 ):
     db_tag = TagsGateway.get_by_id(tag_id, db)
