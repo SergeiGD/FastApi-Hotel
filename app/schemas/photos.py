@@ -17,7 +17,7 @@ class PhotoUpdate(BaseModel):
 
 class Photo(BaseModel):
     id: int
-    category: Category
+    category_id: int
     order: int
     path: str
 
