@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Body, HTTPException, status, BackgroundT
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from typing import Annotated
-from dependencies import get_db
+from dependencies import get_db, get_current_user
 from sqlalchemy.orm import Session
 from hotel_business_module.gateways.users_gateway import UsersGateway
 from hotel_business_module.models.tokens import TokenType
@@ -10,7 +10,8 @@ from hotel_business_module.models.users import Client as DbClient
 from hotel_business_module.settings import settings
 from tasks import send_email_to_user
 from schemas.jwt_tokens import JWTToken
-from schemas.users import UserLogin, UserSingUp
+from schemas.users import UserLogin, UserSingUp, User
+from schemas.permissions import Permission
 import logging
 from logger_conf import LOGGING as LOG_CONF
 
@@ -191,3 +192,11 @@ def confirm_sign_up(
     UsersGateway.confirm_account(token=sing_up_token, db=db)
     response = jsonable_encoder({'msg': 'Регистрация завершена'})
     return JSONResponse(content=response)
+
+
+@router.get('/get_my_permissions/', response_model=list[Permission])
+def get_my_permissions(
+        current_user: Annotated[User, Depends(get_current_user)],
+        db: Annotated[Session, Depends(get_db)]
+):
+    return UsersGateway.get_user_permissions(current_user, db)
